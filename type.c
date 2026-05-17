@@ -425,6 +425,8 @@ bool is_record_compat(Type *t1, Type *t2) {
       t1->is_flexible != t2->is_flexible)
     return false;
 
+  if (t1->is_record != t2->is_record)
+    return false;
   Member *mem1 = t1->members;
   Member *mem2 = t2->members;
   while (mem1 && mem2) {

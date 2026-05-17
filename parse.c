@@ -4910,6 +4910,8 @@ static Type *struct_union_decl(Token **rest, Token *tok, TypeKind kind) {
 
     if (tok->kind != TK_LCURLY) {
       *rest = tok;
+      if (ty->is_record != is_record)
+        error_tok(tok, "tag redeclaration (_Record)");
       return ty;
     }
     ty->is_constructing = true;
@@ -4967,8 +4969,8 @@ static Type *struct_decl(Type *ty, int align, int pack_align) {
   int64_t bits = 0;
 
   for (Member *mem = ty->members; mem; mem = mem->next) {
-    if (ty->is_record == RECORD_TYPES && //
-          mem->ty->kind == TY_STRUCT ||  //
+    if (ty->is_record &&                //
+          mem->ty->kind == TY_STRUCT || //
         mem->ty->kind == TY_UNION)
       mem->ty->is_record = ty->is_record;
 
