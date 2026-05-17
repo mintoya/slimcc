@@ -3581,7 +3581,7 @@ static int64_t eval2(Node *node, EvalContext *ctx) {
   case ND_BITAND: return eval(lhs) & eval(rhs);
   case ND_BITOR:  return eval(lhs) | eval(rhs);
   case ND_BITXOR: return eval(lhs) ^ eval(rhs);
-  case ND_SHL:    {
+  case ND_SHL: {
     int64_t lval = eval(lhs);
     int64_t rval = eval(rhs);
     if (rval < 0 || rval >= ty->size * 8)
@@ -3622,7 +3622,7 @@ static int64_t eval2(Node *node, EvalContext *ctx) {
   case ND_BITNOT: return eval_sign_extend(ty, ~eval(lhs));
   case ND_LOGAND: return eval(lhs) && eval(rhs);
   case ND_LOGOR:  return eval(lhs) || eval(rhs);
-  case ND_CAST:   {
+  case ND_CAST: {
     if (lhs->ty->kind == TY_BITINT) {
       BitBuf *data = eval_bitint(lhs);
       if (eval_recover && *eval_recover)
@@ -4000,7 +4000,7 @@ static BitBuf *eval_bitint(Node *node) {
   case ND_SUB:
   case ND_MUL:
   case ND_DIV:
-  case ND_MOD:    {
+  case ND_MOD: {
     BitBuf *lval = eval_bitint(lhs);
     BitBuf *rval = eval_bitint(rhs);
     if (eval_recover && *eval_recover)
@@ -4014,7 +4014,7 @@ static BitBuf *eval_bitint(Node *node) {
     case ND_SUB:    eval_bitint_sub(ty->bit_cnt, lval, rval); break;
     case ND_MUL:    eval_bitint_mul(ty->bit_cnt, lval, rval); break;
     case ND_DIV:
-    case ND_MOD:    {
+    case ND_MOD: {
       bool res = eval_bitint_to_bool(ty->bit_cnt, rval);
       if (!res)
         return (void *)eval_error2(node, "division by zero during constant evaluation");
@@ -4043,7 +4043,7 @@ static BitBuf *eval_bitint(Node *node) {
   }
   case ND_BITNOT:
   case ND_POS:
-  case ND_NEG:    {
+  case ND_NEG: {
     BitBuf *val = eval_bitint(lhs);
     if (eval_recover && *eval_recover)
       return free(val), NULL;
@@ -4915,6 +4915,7 @@ static Type *struct_union_decl(Token **rest, Token *tok, TypeKind kind) {
     ty->is_constructing = true;
   }
   ty->is_record = is_record;
+
   struct_members(&tok, skip_tk(tok, TK_LCURLY), ty);
 
   attr_aligned(tok, TK_ATTR, &alt_align);
@@ -4966,6 +4967,11 @@ static Type *struct_decl(Type *ty, int align, int pack_align) {
   int64_t bits = 0;
 
   for (Member *mem = ty->members; mem; mem = mem->next) {
+    if (ty->is_record == RECORD_TYPES && //
+          mem->ty->kind == TY_STRUCT ||  //
+        mem->ty->kind == TY_UNION)
+      mem->ty->is_record = ty->is_record;
+
     int64_t mem_align = member_align(mem, pack_align);
 
     if (!mem->is_bitfield || mem->name) {
