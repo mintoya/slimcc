@@ -350,6 +350,7 @@ typedef enum {
   TK_nullptr,
   TK_defer,
   TK_FUNCTION,
+  TK_PRETTY_FUNCTION,
   TK_GNU_label,
 
   TK_TYPEKW,
@@ -385,6 +386,7 @@ typedef enum {
   TK_thread_local,
   TK_volatile,
   TK_TYPEKW_END,
+  TK_Record
 } TokenKind;
 
 typedef enum {
@@ -948,6 +950,11 @@ struct Type {
   Node *pre_calc;
   bool is_variadic;
   bool is_oldstyle;
+  enum {
+    RECORD_DEFAULT = 0,
+    RECORD_NAMES = 1,
+    RECORD_TYPES = 2,
+  } is_record;
 };
 
 // Struct member

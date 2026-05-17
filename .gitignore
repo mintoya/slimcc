@@ -9,3 +9,4 @@
 /slimcc-asan
 /slimcc-filc
 /slimcc-lto*
+/platform.c

@@ -3581,7 +3581,7 @@ static int64_t eval2(Node *node, EvalContext *ctx) {
   case ND_BITAND: return eval(lhs) & eval(rhs);
   case ND_BITOR:  return eval(lhs) | eval(rhs);
   case ND_BITXOR: return eval(lhs) ^ eval(rhs);
-  case ND_SHL: {
+  case ND_SHL:    {
     int64_t lval = eval(lhs);
     int64_t rval = eval(rhs);
     if (rval < 0 || rval >= ty->size * 8)
@@ -3622,7 +3622,7 @@ static int64_t eval2(Node *node, EvalContext *ctx) {
   case ND_BITNOT: return eval_sign_extend(ty, ~eval(lhs));
   case ND_LOGAND: return eval(lhs) && eval(rhs);
   case ND_LOGOR:  return eval(lhs) || eval(rhs);
-  case ND_CAST: {
+  case ND_CAST:   {
     if (lhs->ty->kind == TY_BITINT) {
       BitBuf *data = eval_bitint(lhs);
       if (eval_recover && *eval_recover)
@@ -4000,7 +4000,7 @@ static BitBuf *eval_bitint(Node *node) {
   case ND_SUB:
   case ND_MUL:
   case ND_DIV:
-  case ND_MOD: {
+  case ND_MOD:    {
     BitBuf *lval = eval_bitint(lhs);
     BitBuf *rval = eval_bitint(rhs);
     if (eval_recover && *eval_recover)
@@ -4014,7 +4014,7 @@ static BitBuf *eval_bitint(Node *node) {
     case ND_SUB:    eval_bitint_sub(ty->bit_cnt, lval, rval); break;
     case ND_MUL:    eval_bitint_mul(ty->bit_cnt, lval, rval); break;
     case ND_DIV:
-    case ND_MOD: {
+    case ND_MOD:    {
       bool res = eval_bitint_to_bool(ty->bit_cnt, rval);
       if (!res)
         return (void *)eval_error2(node, "division by zero during constant evaluation");
@@ -4043,7 +4043,7 @@ static BitBuf *eval_bitint(Node *node) {
   }
   case ND_BITNOT:
   case ND_POS:
-  case ND_NEG: {
+  case ND_NEG:    {
     BitBuf *val = eval_bitint(lhs);
     if (eval_recover && *eval_recover)
       return free(val), NULL;
@@ -4875,6 +4875,7 @@ static Type *struct_tag(TypeKind kind, Token *tag, Token *tok, Type **tag_compat
 
 static Type *struct_union_decl(Token **rest, Token *tok, TypeKind kind) {
   bool is_packed = false;
+  typeof(tok->ty->is_record) is_record = RECORD_DEFAULT;
   bool_attr(tok, TK_ATTR, "packed", &is_packed);
   bool_attr(tok, TK_BATTR, "packed", &is_packed);
 
@@ -4882,6 +4883,18 @@ static Type *struct_union_decl(Token **rest, Token *tok, TypeKind kind) {
   attr_aligned(tok, TK_ATTR, &alt_align);
   attr_aligned(tok, TK_BATTR, &alt_align);
 
+  if (tok->kind == TK_Record) {
+    is_record = RECORD_NAMES;
+    tok = tok->next;
+    if (consume_tk(&tok, tok, TK_LPAREN)) {
+      if (consume(&tok, tok, "types")) {
+        is_record = RECORD_TYPES;
+        if (!consume_tk(&tok, tok, TK_RPAREN))
+          error_tok(tok, "expected ')'");
+      } else
+        error_tok(tok, "expected 'types'");
+    }
+  }
   Token *tag = NULL;
   if (tok->kind == TK_IDENT) {
     tag = tok;
@@ -4901,7 +4914,7 @@ static Type *struct_union_decl(Token **rest, Token *tok, TypeKind kind) {
     }
     ty->is_constructing = true;
   }
-
+  ty->is_record = is_record;
   struct_members(&tok, skip_tk(tok, TK_LCURLY), ty);
 
   attr_aligned(tok, TK_ATTR, &alt_align);
@@ -5649,7 +5662,19 @@ static Node *primary(Token **rest, Token *tok) {
     *rest = tok->next;
     return new_var_node(fnctx->fnname, tok);
   }
-
+  if (tok->kind == TK_PRETTY_FUNCTION)
+  // TODO
+  {
+    if (!fnctx)
+      error_tok(tok, "not in function");
+    if (!fnctx->fnname) {
+      char *name = fnctx->fn->name;
+      fnctx->fnname = new_static_lvar(array_of(ty_pchar, strlen(name) + 1));
+      fnctx->fnname->init_data = name;
+    }
+    *rest = tok->next;
+    return new_var_node(fnctx->fnname, tok);
+  }
   error_tok(tok, "expected an expression");
 }
 

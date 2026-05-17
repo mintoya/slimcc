@@ -1,5 +1,4 @@
 #include "slimcc.h"
-#include <string.h>
 
 Type *ty_void = &(Type){.kind = TY_VOID, .size = 1, .align = 1};
 Type *ty_bool = &(Type){.kind = TY_BOOL, .size = 1, .align = 1, .is_unsigned = true};
@@ -436,8 +435,10 @@ bool is_record_compat(Type *t1, Type *t2) {
         mem1->bit_width != mem2->bit_width)
       return false;
 
-    if ((!mem1->name != !mem2->name) || (mem1->name && !equal_tok(mem1->name, mem2->name)))
-      return false;
+    if (t1->is_record != RECORD_TYPES || t2->is_record != RECORD_TYPES)
+      if ((!mem1->name != !mem2->name) ||
+          (mem1->name && !equal_tok(mem1->name, mem2->name)))
+        return false;
 
     Type *t1 = mem1->ty;
     Type *t2 = mem2->ty;
@@ -449,9 +450,11 @@ bool is_record_compat(Type *t1, Type *t2) {
         return false;
 
     if (t1->kind == TY_STRUCT || t1->kind == TY_UNION) {
-      if (((mem1->name || mem2->name) && !equal_tok(mem1->name, mem2->name)) ||
-          ((t1->tag || t2->tag) && !equal_tok(t1->tag, t2->tag)))
-        return false;
+      if (t1->is_record != RECORD_TYPES || t2->is_record != RECORD_TYPES) {
+        if (((mem1->name || mem2->name) && !equal_tok(mem1->name, mem2->name)) ||
+            ((t1->tag || t2->tag) && !equal_tok(t1->tag, t2->tag)))
+          return false;
+      }
       if (!is_qual_compat(t1, t2) || !is_record_compat(t1, t2))
         return false;
     } else {
@@ -523,7 +526,11 @@ bool is_compatible(Type *t1, Type *t2) {
     return p1 == NULL && p2 == NULL;
   }
   case TY_STRUCT:
-  case TY_UNION:  return is_tag_compat(t1, t2) && is_record_compat(t1, t2);
+  case TY_UNION: {
+    return !(t1->is_record && t2->is_record)
+             ? is_tag_compat(t1, t2) && is_record_compat(t1, t2)
+             : is_record_compat(t1, t2);
+  }
   }
   return false;
 }

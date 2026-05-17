@@ -343,6 +343,7 @@ TokenKind ident_keyword(Token *tok) {
 
     hashmap_put(&map, "__func__", (void *)TK_FUNCTION);
     hashmap_put(&map, "__FUNCTION__", (void *)TK_FUNCTION);
+    hashmap_put(&map, "__PRETTY_FUNCTION__", (void *)TK_PRETTY_FUNCTION);
 
     hashmap_put(&map, "__label__", (void *)TK_GNU_label);
 
@@ -436,6 +437,8 @@ TokenKind ident_keyword(Token *tok) {
       hashmap_put(&map, "thread_local", (void *)TK_thread_local);
     hashmap_put(&map, "_Thread_local", (void *)TK_thread_local);
     hashmap_put(&map, "__thread", (void *)TK_thread_local);
+    if (opt_std >= STD_C23)
+      hashmap_put(&map, "_Record", (void *)TK_Record);
 
     hashmap_put(&map, "volatile", (void *)TK_volatile);
     hashmap_put(&map, "__volatile", (void *)TK_volatile);
