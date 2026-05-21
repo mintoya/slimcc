@@ -33,6 +33,7 @@ jobs:
           - { vm: debian12, proj: bootstrap_uclibcng }
           - { vm: debian12, proj: test_busybox }
           - { vm: debian12, proj: test_glib }
+          - { vm: debian12, proj: test_libmicrohttpd }
           - { vm: interop, proj: build_cairo }
           - { vm: interop, proj: build_foot }
           - { vm: interop, proj: build_glfw }
@@ -185,7 +186,6 @@ jobs:
           - { vm: main, proj: test_libjpeg }
           - { vm: main, proj: test_libjsonc }
           - { vm: main, proj: test_liblz4 }
-          - { vm: main, proj: test_libmicrohttpd }
           - { vm: main, proj: test_libmpc }
           - { vm: main, proj: test_libmpfr }
           - { vm: main, proj: test_libopus }

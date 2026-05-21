@@ -16,6 +16,7 @@ void platform_init_driver(void) {
 }
 
 void platform_stdinc_paths(StringArray *paths) {
+  add_include_path(paths, ROOT_DIR "/lib/slimcc/platform_fix/linux_uclibcng");
   add_include_path(paths, ROOT_DIR "/lib/slimcc/include");
   add_include_path(paths, ROOT_DIR "/usr/include");
 }
