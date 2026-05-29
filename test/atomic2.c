@@ -33,10 +33,23 @@ int f64(void) {
   return 1;
 }
 
+int array_loadstore(int cnt) {
+  struct { _Atomic int i[1]; } s = { 3 };
+  ASSERT(3, atomic_load(s.i));
+
+  _Atomic int vla[cnt] = {};
+  atomic_store(vla, 7);
+
+  ASSERT(7, atomic_load(vla));
+  ASSERT(0, atomic_load(vla + 1));
+  return 1;
+}
+
 int main(void) {
   ASSERT(1, ptr_arith());
   ASSERT(1, f32());
   ASSERT(1, f64());
+  ASSERT(1, array_loadstore(2));
 
   printf("OK\n");
 }

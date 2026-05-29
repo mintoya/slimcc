@@ -5354,12 +5354,11 @@ static Node *builtin_functions(Token **rest, Token *tok) {
     tok = skip_tk(tok->next, TK_LPAREN);
     Node *node = assign(&tok, tok);
     *rest = skip_tk(tok, TK_RPAREN);
-    add_type(node);
     ptr_convert(&node);
-    if (node->ty->kind != TY_PTR || node->ty->base->kind == TY_VOID)
+    if (!node->ty->base || node->ty->base->kind == TY_VOID)
       error_tok(tok, "expected pointer to non-void type");
-
-    node->ty = pointer_to(add_qual(Q_ATOMIC, node->ty->base, node->tok));
+    if (!(node->ty->base->qual & Q_ATOMIC))
+      node->ty = pointer_to(add_qual(Q_ATOMIC, node->ty->base, node->tok));
     return node;
   }
 
